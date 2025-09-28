@@ -23,7 +23,7 @@
     },
     "ghcr.io/devcontainers/features/python:1": {
       "installTools": true,
-      "version": "3.12"
+      "version": "latest"
     }
   },
   "containerEnv": {
@@ -48,6 +48,7 @@
         "humao.rest-client",
         "yoavbls.pretty-ts-errors",
         "ms-playwright.playwright",
+        "pflannery.vscode-versionlens",
         "lokalise.i18n-ally",
         "GitLab.gitlab-workflow",
         "Tim-Koehler.helm-intellisense",
