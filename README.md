@@ -1,59 +1,55 @@
 # FutureHax Devcontainer Base
 
-A reusable base devcontainer configuration that projects can build upon.
+Base devcontainer configuration for consistent development environments.
 
-## Quick Setup
+## Setup
 
-1. **Add the submodule:**
+1. **Add this submodule to your project:**
    ```bash
    git submodule add git@github.com:FutureHax/Devcontainer-Base.git .devcontainer-common
    ```
 
-2. **Run the setup script:**
-   ```bash
-   ./.devcontainer-common/setup-devcontainer.sh
+2. **Create `.devcontainer-specific/devcontainer.json`:**
+   ```json
+   {
+     // Project-specific features to add to base
+     "features": {
+       // Your features here
+     }
+   }
    ```
 
-3. **Commit:**
+3. **Build the devcontainer:**
    ```bash
-   git add .devcontainer .devcontainer-common .gitmodules
-   git commit -m "Add base devcontainer configuration"
+   node .devcontainer-common/build-devcontainer.js
    ```
 
-## What You Get
+4. **Add to `.gitignore`:**
+   ```
+   .devcontainer/
+   ```
 
-The base devcontainer provides:
-- 🖥️ Multi-architecture support (amd64/arm64)
+## Project Structure
+
+```
+your-project/
+├── .devcontainer-common/     # This submodule (base config)
+├── .devcontainer-specific/   # Your project's config
+│   ├── devcontainer.json    # Project features/settings
+│   └── postCreateCommand.sh # Project-specific setup
+└── .devcontainer/           # Generated (don't commit)
+```
+
+## What's Included
+
 - 🐳 Docker-in-Docker
-- ☸️ Kubernetes tools (kubectl, helm)
-- 📦 Node.js LTS with nvm
+- 📦 Node.js LTS  
 - 🐍 Python 3.12
-- 🔧 Common VS Code extensions
-- 🐚 Zsh with Oh My Zsh
+- ☸️ Kubernetes tools
+- 🔧 VS Code extensions
+- 🐚 Zsh + Oh My Zsh
 - ⭐ Starship prompt
 
 ## Customization
 
-Your project's `.devcontainer/devcontainer.json` can add:
-- Additional VS Code extensions
-- Project-specific features
-- Custom environment variables
-- Additional post-create commands
-
-Your project can also include:
-- `.devcontainer/installDependencies.sh` - Will run after base dependencies are installed
-- Any other scripts or configuration files needed by your project
-
-The setup script will merge your existing configuration with the base, preserving all your customizations.
-
-## To update the base container:
-
-```bash
-cd .devcontainer-common
-git pull origin main
-cd ..
-git add .devcontainer-common
-git commit -m "Update devcontainer base"
-```
-
-That's it!
+Your `.devcontainer-specific/postCreateCommand.sh` runs automatically after base setup.
