@@ -1,0 +1,103 @@
+{
+  "name": "Debian Multi-Arch Dev Container",
+  "build": {
+    "dockerfile": "./Dockerfile",
+    "platforms": ["linux/amd64", "linux/arm64"],
+    "args": {
+      "VARIANT": "bullseye"
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true,
+      "dockerDashComposeVersion": "v2"
+    },
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "latest",
+      "helm": "latest",
+      "minikube": "none"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "nodeGypDependencies": true,
+      "version": "lts",
+      "nvmVersion": "latest"
+    },
+    "ghcr.io/devcontainers-contrib/features/apt-get-packages:1": {
+      "packages": "ssh-askpass,direnv,dos2unix,fasd,fonts-firacode,postgresql-client,gawk,bison"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "installTools": true,
+      "version": "3.12"
+    }
+  },
+  "containerEnv": {
+    "DOCKER_BUILDKIT": "1",
+    "BUILDKIT_PROGRESS": "plain"
+  },
+  "mounts": ["source=devcontainer-bashhistory,target=/commandhistory,type=volume"],
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "zsh",
+            "icon": "terminal"
+          }
+        }
+      },
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "vitest.explorer",
+        "humao.rest-client",
+        "yoavbls.pretty-ts-errors",
+        "ms-playwright.playwright",
+        "lokalise.i18n-ally",
+        "GitLab.gitlab-workflow",
+        "Tim-Koehler.helm-intellisense",
+        "VadzimNestsiarenka.helm-template-preview-and-more",
+        "VisualStudioExptTeam.vscodeintellicode",
+        "VisualStudioExptTeam.intellicode-api-usage-examples",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "kiliantyler.kubernetes-yaml-formatter-x",
+        "PKief.material-icon-theme",
+        "zhuangtongfa.material-theme",
+        "ms-python.python",
+        "mutantdino.resourcemonitor",
+        "foxundermoon.shell-format",
+        "timonwong.shellcheck",
+        "Artymaury.template-finder",
+        "Gruntfuggly.todo-tree",
+        "ms-vscode-remote.remote-wsl",
+        "redhat.vscode-yaml",
+        "ritwickdey.LiveServer",
+        "mygnet.vscode-anemona-task",
+        "yzhang.markdown-all-in-one",
+        "task.vscode-task",
+        "spmeesseman.vscode-taskexplorer",
+        "paulvarache.vscode-taskfile",
+        "aaron-bond.better-comments",
+        "usernamehw.errorlens",
+        "christian-kohler.npm-intellisense",
+        "kamikillerto.vscode-colorize",
+        "vivaxy.vscode-conventional-commits",
+        "github.copilot",
+        "github.copilot-labs",
+        "jeff-hykin.better-shellscript-syntax",
+        "oderwat.indent-rainbow",
+        "christian-kohler.path-intellisense",
+        "logerfo.gitlab-notifications",
+        "jsayol.firebase-explorer",
+        "zerotask.firebase-configuration-schema",
+        "ghmcadams.lintlens",
+        "jebbs.plantuml",
+        "rentalhost.npm-outdated-plus",
+        "AntiAntiSepticeye.vscode-color-picker",
+        "mskelton.npm-outdated"
+      ]
+    }
+  },
+  "postCreateCommand": "sh .devcontainer/postCreateCommand.sh",
+  "workspaceFolder": "/workspaces/safe-zones-dashboard"
+}

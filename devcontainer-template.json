@@ -1,0 +1,37 @@
+{
+  "name": "${localWorkspaceFolderBasename} Dev Container",
+  "build": {
+    "dockerfile": "../.devcontainer-common/.devcontainer/Dockerfile",
+    "context": "../.devcontainer-common",
+    "platforms": [
+      "linux/amd64",
+      "linux/arm64"
+    ]
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true,
+      "dockerDashComposeVersion": "v2"
+    },
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "latest",
+      "helm": "latest",
+      "minikube": "none"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "nodeGypDependencies": true,
+      "version": "lts",
+      "nvmVersion": "latest"
+    }
+  },
+  "containerEnv": {
+    "DOCKER_BUILDKIT": "1",
+    "BUILDKIT_PROGRESS": "plain"
+  },
+  "mounts": [
+    "source=devcontainer-bashhistory,target=/commandhistory,type=volume"
+  ],
+  "postCreateCommand": "cd .devcontainer-common && sh .devcontainer/postCreateCommand.sh",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
+}
