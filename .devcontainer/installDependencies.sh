@@ -11,14 +11,40 @@ ARCH=$(uname -m)
 echo ">>>> Detected architecture: $ARCH"
 
 echo ">>>> Installing Go and Task..."
+
+# Function to get latest Go version
+get_latest_go_version() {
+    # Fetch the latest stable Go version from the official Go website
+    local latest_version=$(curl -s https://go.dev/dl/?mode=json | jq -r '.[0].version' | sed 's/go//')
+    if [ -z "$latest_version" ]; then
+        echo ">>> Failed to fetch latest Go version, using fallback"
+        echo "1.22.0"  # Fallback version
+    else
+        echo "$latest_version"
+    fi
+}
+
+# Function to get latest Task version
+get_latest_task_version() {
+    # Fetch the latest Task version from GitHub releases
+    local latest_version=$(curl -s https://api.github.com/repos/go-task/task/releases/latest | jq -r '.tag_name')
+    if [ -z "$latest_version" ]; then
+        echo ">>> Failed to fetch latest Task version, using fallback"
+        echo "v3.38.0"  # Fallback version
+    else
+        echo "$latest_version"
+    fi
+}
+
 # Install Go and Task using direct downloads
 install_go_and_task() {
     # Detect architecture
     local ARCH=$(dpkg --print-architecture)
     echo ">>> Architecture: $ARCH"
     
-    # Set Go version and architecture
-    local GO_VERSION="1.25.1"
+    # Get latest Go version
+    local GO_VERSION=$(get_latest_go_version)
+    echo ">>> Latest Go version: $GO_VERSION"
     local GO_ARCH=""
     case "$ARCH" in
         arm64|aarch64)
@@ -56,7 +82,8 @@ install_go_and_task() {
     
     # Install Task
     echo ">>> Installing Task..."
-    local TASK_VERSION="v3.45.3"
+    local TASK_VERSION=$(get_latest_task_version)
+    echo ">>> Latest Task version: $TASK_VERSION"
     local TASK_ARCH=""
     case "$ARCH" in
         arm64|aarch64)
@@ -267,138 +294,14 @@ install_starship() {
 install_starship || echo "❌ Failed to install starship"
 source ~/.bashrc
 
-echo ">>>> Installing Google Cloud SDK..."
-# Install Google Cloud SDK
-install_gcloud() {
-    echo ">>> Installing Google Cloud SDK..."
-    
-    # Create keyring directory if it doesn't exist
-    sudo mkdir -p /usr/share/keyrings
-    
-    # Import the Google Cloud public key using the new method
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
-    
-    # Add the Cloud SDK distribution URI as a package source
-    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list
-    
-    # Update and install the Cloud SDK
-    sudo apt-get update -qq && sudo apt-get install -y google-cloud-sdk
-    
-    # Install GKE auth plugin for kubectl
-    echo ">>> Installing GKE gcloud auth plugin..."
-    sudo apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin
-    
-    # Verify installation
-    if command -v gcloud &> /dev/null; then
-        echo ">>> Google Cloud SDK installed successfully"
-        gcloud version
-        
-        # Verify GKE auth plugin
-        if gke-gcloud-auth-plugin --version &> /dev/null; then
-            echo ">>> GKE auth plugin installed successfully"
-        else
-            echo ">>> WARNING: GKE auth plugin installation may have failed"
-        fi
-    else
-        echo ">>> ERROR: Failed to install Google Cloud SDK"
-        return 1
-    fi
-}
-
-# Run the installation
-install_gcloud || echo "❌ Failed to install Google Cloud SDK"
-
-echo ">>>> Installing Velero CLI..."
-# Install Velero CLI for Kubernetes backup management
-install_velero() {
-    echo ">>> Installing Velero CLI..."
-    
-    # Set version to match project requirements
-    local VELERO_VERSION="v1.17.0"
-    local ARCH=$(uname -m)
-    
-    # Map architecture names to Velero naming convention
-    case "$ARCH" in
-        x86_64)
-            ARCH_NAME="amd64"
-            ;;
-        aarch64|arm64)
-            ARCH_NAME="arm64"
-            ;;
-        *)
-            echo "Unsupported architecture: $ARCH"
-            return 1
-            ;;
-    esac
-    
-    echo ">>> Downloading Velero ${VELERO_VERSION} for linux-${ARCH_NAME}..."
-    
-    # Download and install
-    local DOWNLOAD_URL="https://github.com/vmware-tanzu/velero/releases/download/${VELERO_VERSION}/velero-${VELERO_VERSION}-linux-${ARCH_NAME}.tar.gz"
-    local TMP_DIR=$(mktemp -d)
-    
-    cd "$TMP_DIR" || return 1
-    
-    # Download with error checking
-    if ! curl -fsSL -o velero.tar.gz "$DOWNLOAD_URL"; then
-        echo ">>> ERROR: Failed to download Velero from $DOWNLOAD_URL"
-        cd - > /dev/null
-        rm -rf "$TMP_DIR"
-        return 1
-    fi
-    
-    # Extract with error checking
-    if ! tar -xzf velero.tar.gz; then
-        echo ">>> ERROR: Failed to extract Velero archive"
-        cd - > /dev/null
-        rm -rf "$TMP_DIR"
-        return 1
-    fi
-    
-    # Find and install the velero binary
-    local VELERO_DIR=$(find . -maxdepth 1 -type d -name "velero-*" | head -1)
-    if [ -z "$VELERO_DIR" ] || [ ! -f "$VELERO_DIR/velero" ]; then
-        echo ">>> ERROR: Velero binary not found in extracted archive"
-        cd - > /dev/null
-        rm -rf "$TMP_DIR"
-        return 1
-    fi
-    
-    # Install to /usr/local/bin
-    if ! sudo mv "$VELERO_DIR/velero" /usr/local/bin/; then
-        echo ">>> ERROR: Failed to move Velero to /usr/local/bin"
-        cd - > /dev/null
-        rm -rf "$TMP_DIR"
-        return 1
-    fi
-    
-    sudo chmod +x /usr/local/bin/velero
-    
-    # Clean up
-    cd - > /dev/null
-    rm -rf "$TMP_DIR"
-    
-    # Verify installation
-    if command -v velero &> /dev/null; then
-        echo ">>> Velero CLI installed successfully"
-        velero version --client-only
-    else
-        echo ">>> ERROR: Velero installation verification failed"
-        return 1
-    fi
-}
-
-# Run the installation
-install_velero || echo "❌ Failed to install Velero CLI"
-
 # All packages installed successfully
 
 echo ">>>> Activating Python virtual environment..."
-#source .venv/bin/activate
+source .venv/bin/activate
 echo ">>>>>> Python virtual environment activated."
 
 echo ">>>> Installing Python packages from requirements.txt..."
-#pip install --upgrade --no-cache -r requirements.txt 
+pip install --upgrade --no-cache -r requirements.txt 
 echo ">>>>>> Python packages installed."
 
 echo ">> All packages installed."

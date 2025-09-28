@@ -9,7 +9,20 @@ echo "Detected architecture: $ARCH"
 # All packages are now installed directly without Homebrew
 echo "All dependencies will be installed directly without Homebrew"
 
+# Run base dependencies installation
 "$DEV_CONTAINER_ROOT"/installDependencies.sh
+
+# Run project-specific dependencies if exists
+# Get the workspace folder (two levels up from this script)
+WORKSPACE_DIR=$(cd "$DEV_CONTAINER_ROOT/../.." && pwd)
+PROJECT_INSTALL_SCRIPT="$WORKSPACE_DIR/.devcontainer/installDependencies.sh"
+if [ -f "$PROJECT_INSTALL_SCRIPT" ]; then
+    echo ""
+    echo "Running project-specific dependencies installation..."
+    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+    sh "$PROJECT_INSTALL_SCRIPT"
+    echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+fi
 
 # Starship configuration
 if command -v starship >/dev/null 2>&1; then
