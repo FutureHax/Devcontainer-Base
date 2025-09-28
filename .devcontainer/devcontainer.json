@@ -79,6 +79,7 @@
         "kamikillerto.vscode-colorize",
         "vivaxy.vscode-conventional-commits",
         "github.copilot",
+        "github.vscode-github-actions",
         "github.copilot-labs",
         "jeff-hykin.better-shellscript-syntax",
         "oderwat.indent-rainbow",
