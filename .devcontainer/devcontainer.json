@@ -30,7 +30,10 @@
     "DOCKER_BUILDKIT": "1",
     "BUILDKIT_PROGRESS": "plain"
   },
-  "mounts": ["source=devcontainer-bashhistory,target=/commandhistory,type=volume"],
+  "mounts": [
+    "source=devcontainer-bashhistory,target=/commandhistory,type=volume",
+    "type=bind,source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/root/.ssh,readonly"
+  ],
   "customizations": {
     "vscode": {
       "settings": {
@@ -50,6 +53,7 @@
         "ms-playwright.playwright",
         "pflannery.vscode-versionlens",
         "lokalise.i18n-ally",
+        "AndyGongea.update-now",
         "GitLab.gitlab-workflow",
         "Tim-Koehler.helm-intellisense",
         "VadzimNestsiarenka.helm-template-preview-and-more",
