@@ -102,6 +102,8 @@ else
   git config --global user.name "$GIT_USER_NAME"
 fi
 
+git config --global help.autocorrect 1
+
 # Check if we're in WSL and configure credential manager
 if [ -f /proc/sys/fs/binfmt_misc/WSLInterop ]; then
     echo "   • Detected WSL environment"
@@ -116,9 +118,6 @@ if [ -f /proc/sys/fs/binfmt_misc/WSLInterop ]; then
         echo "   ⚠️  Windows Git Credential Manager not found, using cache helper"
     fi
 fi
-
-# Set up GitLab-specific configurations
-git config --global credential.https://gitlab.futurehax.com.provider generic
 
 echo ""
 echo "🎉 Git configuration complete!"
