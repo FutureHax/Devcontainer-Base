@@ -61,27 +61,24 @@ install_go_and_task() {
     
     # Install Go
     echo ">>> Installing Go ${GO_VERSION} for ${GO_ARCH}..."
-    local GO_TAR="go${GO_VERSION}.linux-${GO_ARCH}.tar.gz"
-    wget -q -O /tmp/${GO_TAR} "https://go.dev/dl/${GO_TAR}"
+    wget -q -O /tmp/go.tar.gz "https://go.dev/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz"
     sudo rm -rf /usr/local/go
-    sudo tar -C /usr/local -xzf /tmp/${GO_TAR}
-    rm /tmp/${GO_TAR}
+    sudo tar -C /usr/local -xzf /tmp/go.tar.gz
+    rm /tmp/go.tar.gz
     
     # Add Go to PATH if not already there
     if ! grep -q "/usr/local/go/bin" ~/.bashrc; then
         echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
         echo 'export PATH=$PATH:$HOME/go/bin' >> ~/.bashrc
     fi
-    
-    # Export for current session
-    export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
+    export PATH=$PATH:/usr/local/go/bin
+    export PATH=$PATH:$HOME/go/bin
     
     # Verify Go installation
     echo ">>> Go installed:"
     /usr/local/go/bin/go version
     
-    # Install Task
-    echo ">>> Installing Task..."
+    # Get latest Task version
     local TASK_VERSION=$(get_latest_task_version)
     echo ">>> Latest Task version: $TASK_VERSION"
     local TASK_ARCH=""
@@ -93,7 +90,7 @@ install_go_and_task() {
             TASK_ARCH="amd64"
             ;;
         *)
-            echo "Unsupported architecture: $ARCH"
+            echo "Unsupported architecture for Task: $ARCH"
             return 1
             ;;
     esac
@@ -147,26 +144,23 @@ install_gitleaks() {
     echo ">>> Installing gitleaks v$LATEST_VERSION for $OS $ARCH_NAME..."
     
     # Download and install
-    local DOWNLOAD_URL="https://github.com/gitleaks/gitleaks/releases/download/v${LATEST_VERSION}/gitleaks_${LATEST_VERSION}_${OS}_${ARCH_NAME}.tar.gz"
-    local TMP_DIR=$(mktemp -d)
+    local ARCHIVE="gitleaks_${LATEST_VERSION}_${OS}_${ARCH_NAME}.tar.gz"
+    wget -q -O /tmp/${ARCHIVE} "https://github.com/gitleaks/gitleaks/releases/download/v${LATEST_VERSION}/${ARCHIVE}"
     
-    cd "$TMP_DIR"
-    curl -L -o gitleaks.tar.gz "$DOWNLOAD_URL"
-    tar -xzf gitleaks.tar.gz
+    if [ ! -f "/tmp/${ARCHIVE}" ]; then
+        echo ">>> Failed to download gitleaks"
+        return 1
+    fi
     
-    # Install to ~/.local/bin
-    local INSTALL_DIR="$HOME/.local/bin"
-    mkdir -p "$INSTALL_DIR"
-    mv gitleaks "$INSTALL_DIR/"
-    chmod +x "$INSTALL_DIR/gitleaks"
+    # Extract and install
+    sudo tar -C /usr/local/bin -xzf /tmp/${ARCHIVE} gitleaks
+    sudo chmod +x /usr/local/bin/gitleaks
+    rm /tmp/${ARCHIVE}
     
-    # Clean up
-    cd - > /dev/null
-    rm -rf "$TMP_DIR"
-    
-    # Add to PATH if needed
-    if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
-        echo "export PATH=\"\$PATH:$INSTALL_DIR\"" >> ~/.bashrc
+    # Verify installation
+    if ! command -v gitleaks &> /dev/null; then
+        echo ">>> gitleaks command not found after installation"
+        return 1
     fi
     
     echo ">>> Gitleaks installed successfully"
@@ -175,6 +169,26 @@ install_gitleaks() {
 # Run the installation
 install_gitleaks || echo "❌ Failed to install gitleaks"
 source ~/.bashrc
+
+echo ">>>> Installing Flux CLI..."
+# Install Flux CLI using official install script
+install_flux() {
+    echo ">>> Installing Flux CLI..."
+    curl -s https://fluxcd.io/install.sh | sudo bash
+    
+    # Verify installation
+    if command -v flux &> /dev/null; then
+        echo ">>> Flux installed successfully:"
+        flux --version
+        return 0
+    else
+        echo ">>> Failed to install Flux"
+        return 1
+    fi
+}
+
+# Run the installation
+install_flux || echo "❌ Failed to install Flux"
 
 echo ">>>> Installing Starship prompt..."
 # Install Starship using direct download
@@ -220,88 +234,61 @@ install_starship() {
     
     if [ -z "$LATEST_VERSION" ]; then
         echo "Failed to get latest version, using fallback"
-        LATEST_VERSION="1.23.0"
+        LATEST_VERSION="1.17.1"
     fi
     
     echo ">>> Installing starship v$LATEST_VERSION for $ARCH_NAME-$OS_NAME..."
     
     # Download and install
-    local DOWNLOAD_URL="https://github.com/starship/starship/releases/download/v${LATEST_VERSION}/starship-${ARCH_NAME}-${OS_NAME}.tar.gz"
-    local TMP_DIR=$(mktemp -d)
+    local TAR="starship-${ARCH_NAME}-${OS_NAME}.tar.gz"
+    wget -q -O /tmp/${TAR} "https://github.com/starship/starship/releases/download/v${LATEST_VERSION}/${TAR}"
     
-    cd "$TMP_DIR" || return 1
-    
-    # Download with error checking
-    if ! curl -L -o starship.tar.gz "$DOWNLOAD_URL"; then
-        echo ">>> ERROR: Failed to download Starship from $DOWNLOAD_URL"
-        cd - > /dev/null
-        rm -rf "$TMP_DIR"
+    if [ ! -f "/tmp/${TAR}" ]; then
+        echo ">>> Failed to download starship"
         return 1
     fi
     
-    # Extract with error checking
-    if ! tar -xzf starship.tar.gz; then
-        echo ">>> ERROR: Failed to extract Starship archive"
-        cd - > /dev/null
-        rm -rf "$TMP_DIR"
-        return 1
-    fi
-    
-    # Install to ~/.local/bin
-    local INSTALL_DIR="$HOME/.local/bin"
-    mkdir -p "$INSTALL_DIR"
-    
-    # Move with error checking
-    if ! mv starship "$INSTALL_DIR/"; then
-        echo ">>> ERROR: Failed to move Starship to $INSTALL_DIR"
-        cd - > /dev/null
-        rm -rf "$TMP_DIR"
-        return 1
-    fi
-    
-    chmod +x "$INSTALL_DIR/starship"
-    
-    # Clean up
-    cd - > /dev/null
-    rm -rf "$TMP_DIR"
-    
-    # Add to PATH if needed
-    if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
-        echo "export PATH=\"\$PATH:$INSTALL_DIR\"" >> ~/.bashrc
-    fi
-    
-    # Add starship init to bashrc if not already present
-    if ! grep -q "starship init bash" ~/.bashrc; then
-        echo 'eval "$(starship init bash)"' >> ~/.bashrc
-    fi
-    
-    # Also add to zshrc if zsh is available
-    if [ -f ~/.zshrc ] && ! grep -q "starship init zsh" ~/.zshrc; then
-        echo 'eval "$(starship init zsh)"' >> ~/.zshrc
-    fi
+    # Extract and install
+    sudo tar -C /usr/local/bin -xzf /tmp/${TAR} starship
+    sudo chmod +x /usr/local/bin/starship
+    rm /tmp/${TAR}
     
     # Verify installation
-    if [ -x "$INSTALL_DIR/starship" ]; then
-        echo ">>> Starship installed successfully"
-        echo ">>> Version: $("$INSTALL_DIR/starship" --version 2>/dev/null || echo "Unable to get version")"
-    else
-        echo ">>> ERROR: Starship installation verification failed"
+    if ! command -v starship &> /dev/null; then
+        echo ">>> starship command not found after installation"
         return 1
     fi
+    
+    # Initialize starship for the current user
+    if ! grep -q "starship init" ~/.bashrc; then
+        echo 'eval "$(starship init bash)"' >> ~/.bashrc
+    fi
+    if ! grep -q "starship init" ~/.zshrc 2>/dev/null; then
+        echo 'eval "$(starship init zsh)"' >> ~/.zshrc 2>/dev/null || true
+    fi
+    
+    echo ">>> Starship installed successfully:"
+    /usr/local/bin/starship --version
 }
 
 # Run the installation
-install_starship || echo "❌ Failed to install starship"
-source ~/.bashrc
+install_starship || echo "❌ Failed to install Starship"
 
-# All packages installed successfully
+# Only source bashrc if we're running in bash
+if [ -n "$BASH_VERSION" ]; then
+    source ~/.bashrc
+fi
 
-echo ">>>> Activating Python virtual environment..."
-source .venv/bin/activate
-echo ">>>>>> Python virtual environment activated."
+# Additional tool installations can be added here following the same pattern
 
+# Requirements.txt installation
 echo ">>>> Installing Python packages from requirements.txt..."
-pip install --upgrade --no-cache -r requirements.txt 
-echo ">>>>>> Python packages installed."
 
-echo ">> All packages installed."
+# Check if running in a devcontainer and the requirements file exists
+if [ -f "requirements.txt" ]; then
+    pip3 install -r requirements.txt || echo "❌ Failed to install Python packages"
+else
+    echo ">>>> No requirements.txt found, skipping Python package installation"
+fi
+
+echo ">> All package installations complete!"
