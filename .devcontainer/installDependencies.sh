@@ -274,12 +274,18 @@ install_starship() {
 # Run the installation
 install_starship || echo "❌ Failed to install Starship"
 
-# Only source bashrc if we're running in bash
-if [ -n "$BASH_VERSION" ]; then
-    source ~/.bashrc
-fi
+install_github_cli() {
+    echo ">>>> Installing GitHub CLI..."
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg 
+    sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null 
+    sudo apt update 
+    sudo apt install gh -y
+}
 
-# Additional tool installations can be added here following the same pattern
+# Run the installation
+install_github_cli || echo "❌ Failed to install GitHub CLI"
+source ~/.bashrc
 
 # Requirements.txt installation
 echo ">>>> Installing Python packages from requirements.txt..."
