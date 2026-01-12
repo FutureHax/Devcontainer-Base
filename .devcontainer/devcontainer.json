@@ -54,7 +54,6 @@
         "pflannery.vscode-versionlens",
         "lokalise.i18n-ally",
         "AndyGongea.update-now",
-        "GitLab.gitlab-workflow",
         "Tim-Koehler.helm-intellisense",
         "VadzimNestsiarenka.helm-template-preview-and-more",
         "VisualStudioExptTeam.vscodeintellicode",
@@ -85,10 +84,11 @@
         "github.copilot",
         "github.vscode-github-actions",
         "github.copilot-labs",
+        "github.vscode-pull-request-github",
+        "github.remotehub",
         "jeff-hykin.better-shellscript-syntax",
         "oderwat.indent-rainbow",
         "christian-kohler.path-intellisense",
-        "logerfo.gitlab-notifications",
         "jsayol.firebase-explorer",
         "zerotask.firebase-configuration-schema",
         "ghmcadams.lintlens",
@@ -100,5 +100,5 @@
     }
   },
   "postCreateCommand": "sh .devcontainer/postCreateCommand.sh",
-  "workspaceFolder": "/workspaces/safe-zones-dashboard"
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
 }
